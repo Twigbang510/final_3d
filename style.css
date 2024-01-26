@@ -8,7 +8,11 @@ html, body {
     /* Prevent scrollbars */
     overflow: hidden;
 }
-
+.hub {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
 #lives {
     position: absolute;
     top: 2em;
@@ -31,10 +35,15 @@ button {
 
 #help-button {
     position: absolute;
-    top: 1em;
-    left: 1em;
-}
+    left: 1%;
+    top: 2%;
 
+}
+.toggleSound {
+    position: absolute;
+    top: 0;
+    left: 8%;
+}
 .dialog {
     color: rgb(255, 255, 200);
     background-color: rgba(0, 0, 30, 0.8);
@@ -51,4 +60,9 @@ button {
 
     /* Hidden by default */
     display: none;
+}
+#reset-button{
+    position: absolute;
+    top:50%;
+    left : 50%;
 }

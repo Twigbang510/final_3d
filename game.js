@@ -50,10 +50,14 @@ var LEVEL = [
 
 
 
+const resetGame = function() {
+    location.reload();
+};
+window.resetGame = resetGame;
 
 // Game-specific functions
 // =======================
-var createMap = function (scene, levelDefinition) {
+const createMap = function (scene, levelDefinition) {
     var map = {};
     map.bottom = -(levelDefinition.length - 1);
     map.top = 0;
@@ -110,30 +114,27 @@ var createMap = function (scene, levelDefinition) {
     return map;
 };
 
-var getAt = function (map, position) {
+const getAt = function (map, position) {
     var x = Math.round(position.x), y = Math.round(position.y);
     return map[y] && map[y][x];
 }
 
-var isWall = function (map, position) {
+const isWall = function (map, position) {
     var cell = getAt(map, position);
     return cell && cell.isWall === true;
 };
 
-var removeAt = function (map, scene, position) {
+const removeAt = function (map, scene, position) {
     var x = Math.round(position.x), y = Math.round(position.y);
     if (map[y] && map[y][x]) {
-        /*scene.remove(map[y][x]);
-        delete map[y][x];*/
-
         // Don't actually remove, just make invisible.
         map[y][x].visible = false;
     }
 }
 
-var createWall = function () {
+const createWall = function () {
     var textureLoader = new THREE.TextureLoader();
-    var wallTexture  = textureLoader.load('wall1.jpg');
+    var wallTexture  = textureLoader.load('O5GLLC0.jpg');
     var wallMaterial = new THREE.MeshBasicMaterial({ map: wallTexture });
     var wallGeometry = new THREE.BoxGeometry(1, 1, 1);
 
@@ -145,7 +146,7 @@ var createWall = function () {
     };
 }();
 
-var createDot = function () {
+const createDot = function () {
     var dotGeometry = new THREE.SphereGeometry(DOT_RADIUS);
     var dotMaterial = new THREE.MeshPhongMaterial({ color: 0xFFDAB9 }); // Paech color
 
@@ -157,7 +158,7 @@ var createDot = function () {
     };
 }();
 
-var createPowerPellet = function() {
+const createPowerPellet = function() {
     var pelletGeometry = new THREE.SphereGeometry(PELLET_RADIUS, 12, 8);
     var pelletMaterial = new THREE.MeshPhongMaterial({ color: 0xFFDAB9 }); // Paech color
 
@@ -169,7 +170,7 @@ var createPowerPellet = function() {
     };
 }();
 
-var createRenderer = function () {
+const createRenderer = function () {
     var renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setClearColor('black', 1.0);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -178,20 +179,21 @@ var createRenderer = function () {
     return renderer;
 }
 
-var createScene = function () {
+const createScene = function () {
     var scene = new THREE.Scene();
 
     // Add lighting
-    scene.add(new THREE.AmbientLight(0x888888));
-    var light = new THREE.SpotLight('white', 0.5);
-    light.position.set(0, 0, 50);
+    var ambientLight = new THREE.AmbientLight(0x888888, 1); 
+    scene.add(ambientLight);
+    var light = new THREE.DirectionalLight('white', 1);
+    light.position.set(0, 0, 1);
     scene.add(light);
 
 
     return scene;
 };
 
-var createHudCamera = function (map) {
+const createHudCamera = function (map) {
     var halfWidth = (map.right - map.left) / 2, halfHeight = (map.top - map.bottom) / 2;
 
     var hudCamera = new THREE.OrthographicCamera(-halfWidth, halfWidth, halfHeight, -halfHeight, 1, 100);
@@ -201,14 +203,12 @@ var createHudCamera = function (map) {
     return hudCamera;
 };
 
-var renderHud = function (renderer, hudCamera, scene) {
-    // Increase size of pacman and dots in HUD to make them easier to see.
+const renderHud = function (renderer, hudCamera, scene) {
     scene.children.forEach(function (object) {
         if (object.isWall !== true)
             object.scale.set(2.5, 2.5, 2.5);
     });
 
-    // Only render in the bottom left 200x200 square of the screen.
     renderer.setScissorTest(true);
     renderer.setScissor(10, 10, 200, 200);
     renderer.setViewport(10, 10, 200, 200);
@@ -221,9 +221,7 @@ var renderHud = function (renderer, hudCamera, scene) {
     });
 };
 
-var createPacman = function () {
-    // Create spheres with decreasingly small horizontal sweeps, in order
-    // to create pacman "death" animation.
+const createPacman = function () {
     var pacmanGeometries = [];
     var numFrames = 40;
     var offset;
@@ -245,7 +243,6 @@ var createPacman = function () {
         pacman.atePellet = false;
         pacman.distanceMoved = 0;
 
-        // Initialize pacman facing to the left.
         pacman.position.copy(position);
         pacman.direction = new THREE.Vector3(-1, 0, 0);
 
@@ -256,24 +253,24 @@ var createPacman = function () {
 }();
 
 var createGhost = function () {
-    var loader = new GLTFLoader(); 
-    var modelPath = 'scene.gltf'; 
+    var ghostGeometry = new THREE.SphereGeometry(GHOST_RADIUS, 16, 16);
+
     return function (scene, position) {
-        loader.load(modelPath, function (gltf) {
-            console.log(gltf)
-            var ghost = gltf.scene; 
-            ghost.isGhost = true;
-            ghost.isWrapper = true;
-            ghost.isAfraid = false;
-            ghost.position.copy(position);
-            ghost.direction = new THREE.Vector3(-1, 0, 0); // Ghosts start moving left.
-            scene.add(ghost);
-        });
+        var ghostMaterial = new THREE.MeshPhongMaterial({ color: 'pink' });
+        var ghost = new THREE.Mesh(ghostGeometry, ghostMaterial);
+        ghost.isGhost = true;
+        ghost.isWrapper = true;
+        ghost.isAfraid = false;
+
+        // Ghosts start moving left.
+        ghost.position.copy(position);
+        ghost.direction = new THREE.Vector3(-1, 0, 0);
+
+        scene.add(ghost);
     };
 }();
 
-// Make object wrap to other side of map if it goes out of bounds.
-var wrapObject = function (object, map) {
+const wrapObject = function (object, map) {
     if (object.position.x < map.left)
         object.position.x = map.right;
     else if (object.position.x > map.right)
@@ -290,20 +287,17 @@ var wrapObject = function (object, map) {
 
 // Generic functions
 // =================
-var distance = function () {
+const distance = function () {
     var difference = new THREE.Vector3();
 
     return function (object1, object2) {
-        // Calculate difference between objects' positions.
         difference.copy(object1.position).sub(object2.position);
 
         return difference.length();
     };
 }();
 
-// Returns an object that contains the current state of keys being pressed.
-var createKeyState = function () {
-    // Keep track of current keys being pressed.
+const createKeyState = function () {
     var keyState = {};
 
     document.body.addEventListener('keydown', function (event) {
@@ -325,12 +319,11 @@ var createKeyState = function () {
     return keyState;
 };
 
-var animationLoop = function (callback, requestFrameFunction) {
+const animationLoop = function (callback, requestFrameFunction) {
     requestFrameFunction = requestFrameFunction || requestAnimationFrame;
 
     var previousFrameTime = window.performance.now();
 
-    // How many seconds the animation has progressed in total.
     var animationSeconds = 0;
 
     var render = function () {
@@ -345,20 +338,47 @@ var animationLoop = function (callback, requestFrameFunction) {
 
     requestFrameFunction(render);
 };
+// const createSkybox = function (scene,map) {
+//     const ft = new THREE.TextureLoader().load("ft.png");
+//     const bk = new THREE.TextureLoader().load("bk.png");
+//     const up = new THREE.TextureLoader().load("up.png");
+//     const dn = new THREE.TextureLoader().load("dn.png");
+//     const rt = new THREE.TextureLoader().load("rt.png");
+//     const lf = new THREE.TextureLoader().load("lf.png");
 
+//     const materials = [
+//         new THREE.MeshBasicMaterial({ map: ft }),
+//         new THREE.MeshBasicMaterial({ map: bk }),
+//         new THREE.MeshBasicMaterial({ map: up }),
+//         new THREE.MeshBasicMaterial({ map: dn }),
+//         new THREE.MeshBasicMaterial({ map: rt }),
+//         new THREE.MeshBasicMaterial({ map: lf })
+//     ];
+
+//     const skyboxSize = 20; 
+
+//     const skyboxGeo = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
+//     const skybox = new THREE.Mesh(skyboxGeo, materials);
+
+//     // Set the position of the skybox to the center of the map
+//     skybox.position.set(map.centerX, map.centerY, 0);
+
+//     // Add the skybox to the scene
+//     scene.add(skybox);
+// };
 // Main function
 // =============
-var main = function () {
+const main = function () {
     // Game state variables
     var keys = createKeyState();
 
     var renderer = createRenderer();
     var scene = createScene();
-
     var map = createMap(scene, LEVEL);
     var numDotsEaten = 0;
+    // createSkybox(scene,map);
 
-    var camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+    var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.up.copy(UP);
     camera.targetPosition = new THREE.Vector3();
     camera.targetLookAt = new THREE.Vector3();
@@ -390,6 +410,24 @@ var main = function () {
 
     var killSound = new Audio('pacman_eatghost.mp3');
     killSound.preload = 'auto';
+    var isSoundEnabled = true;
+    var audioVolume = 0.5;
+    const toggleSound = function() {
+        isSoundEnabled = !isSoundEnabled;
+        console.log("11111")
+        if (isSoundEnabled) {
+            chompSound.play();
+            levelStartSound.play();
+            deathSound.play();
+            killSound.play();
+        } else {
+            chompSound.pause();
+            levelStartSound.pause();
+            deathSound.pause();
+            killSound.pause();
+        }
+    };
+    window.toggleSound = toggleSound;
 
     var remove = [];
 
@@ -505,8 +543,8 @@ var main = function () {
             });
 
             // Increase speed.
-            PACMAN_SPEED += 1;
-            GHOST_SPEED += 1;
+            PACMAN_SPEED += 10;
+            GHOST_SPEED += 10;
 
             won = false;
             numDotsEaten = 0;
@@ -623,15 +661,13 @@ var main = function () {
         if (pacman.atePellet === true) {
             ghost.isAfraid = true;
             ghost.becameAfraidTime = now;
-
-            ghost.material.color.setStyle('white');
+            ghost.material.color.setStyle('red');
         }
 
         // Make ghosts not afraid anymore after 10 seconds.
         if (ghost.isAfraid && now - ghost.becameAfraidTime > 10) {
             ghost.isAfraid = false;
-
-            ghost.material.color.setStyle('red');
+            ghost.material.color.setStyle('pink');
         }
 
         moveGhost(ghost, delta);
@@ -650,18 +686,22 @@ var main = function () {
 
                 if (lives > 0)
                     showText('You died', 0.1, now);
-                else
+                else { 
+                    document.getElementById('reset-button').style.display = 'block';
+
                     showText('Game over', 0.1, now);
+                }
+
 
                 lost = true;
                 lostTime = now;
-
+                
                 deathSound.play();
             }
         }
     }
 
-    var moveGhost = function () {
+    const moveGhost = function () {
         var previousPosition = new THREE.Vector3();
         var currentPosition = new THREE.Vector3();
         var leftTurn = new THREE.Vector3();

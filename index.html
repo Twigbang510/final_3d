@@ -2,22 +2,28 @@
 <html>
     <head>
         <link rel="stylesheet" href="style.css" />
+        <script type="module" src="game.js" ></script>
+
     </head>
     <body>
         <div id="lives"></div>
 
-        <button id="help-button" onclick="var dialog = document.getElementById('help-dialog'); dialog.style.display = 'block';">HELP</button>
+        <div class="hub">
+            <button id="help-button" onclick="var dialog = document.getElementById('help-dialog'); dialog.style.display = 'block';">HELP</button>
 
-        <div id="help-dialog" class="dialog">
-            <h2>CONTROLS</h2>
-
-            <p>WASD: Use W/S to move forward/backward and A/D to turn left/right.</p>
-
-            <p>After you collect all of the dots, the game will start over but pacman and the ghosts will get a little bit faster!<p>
-
-            <button onclick="var dialog = document.getElementById('help-dialog'); dialog.style.display = 'none';">Close</button>
+            <div id="help-dialog" class="dialog">
+                <h2>CONTROLS</h2>
+    
+                <p>WASD: Use W/S to move forward/backward and A/D to turn left/right.</p>
+    
+                <p>After you collect all of the dots, the game will start over but pacman and the ghosts will get a little bit faster!<p>
+    
+                <button onclick="var dialog = document.getElementById('help-dialog'); dialog.style.display = 'none';">Close</button>
+            </div>
+    
+            <button class="toggleSound" onclick="toggleSound()">Toggle Sound</button>
+            <button id="reset-button" onclick="resetGame()" style="display: none;">Reset</button>
         </div>
 
-        <script type="module" src="game.js"></script>
     </body>
 </html>
