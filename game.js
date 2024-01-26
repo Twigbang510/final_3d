@@ -132,8 +132,10 @@ var removeAt = function (map, scene, position) {
 }
 
 var createWall = function () {
+    var textureLoader = new THREE.TextureLoader();
+    var wallTexture  = textureLoader.load('wall1.jpg');
+    var wallMaterial = new THREE.MeshBasicMaterial({ map: wallTexture });
     var wallGeometry = new THREE.BoxGeometry(1, 1, 1);
-    var wallMaterial = new THREE.MeshLambertMaterial({ color: 'blue' });
 
     return function () {
         var wall = new THREE.Mesh(wallGeometry, wallMaterial);
@@ -254,21 +256,19 @@ var createPacman = function () {
 }();
 
 var createGhost = function () {
-    var ghostGeometry = new THREE.SphereGeometry(GHOST_RADIUS, 16, 16);
-
+    var loader = new GLTFLoader(); 
+    var modelPath = 'scene.gltf'; 
     return function (scene, position) {
-        // Give each ghost it's own material so we can change the colors of individual ghosts.
-        var ghostMaterial = new THREE.MeshPhongMaterial({ color: 'red' });
-        var ghost = new THREE.Mesh(ghostGeometry, ghostMaterial);
-        ghost.isGhost = true;
-        ghost.isWrapper = true;
-        ghost.isAfraid = false;
-
-        // Ghosts start moving left.
-        ghost.position.copy(position);
-        ghost.direction = new THREE.Vector3(-1, 0, 0);
-
-        scene.add(ghost);
+        loader.load(modelPath, function (gltf) {
+            console.log(gltf)
+            var ghost = gltf.scene; 
+            ghost.isGhost = true;
+            ghost.isWrapper = true;
+            ghost.isAfraid = false;
+            ghost.position.copy(position);
+            ghost.direction = new THREE.Vector3(-1, 0, 0); // Ghosts start moving left.
+            scene.add(ghost);
+        });
     };
 }();
 
@@ -345,9 +345,6 @@ var animationLoop = function (callback, requestFrameFunction) {
 
     requestFrameFunction(render);
 };
-
-
-
 
 // Main function
 // =============
